@@ -75,7 +75,7 @@ LowPass.low_pass_filter(
     squat_set, col=column, sampling_frequency=fs, cutoff_frequency=0.4, order=10
 )[column + "_lowpass"].plot()
 # OR
-bench_set["acc_r_lowpass"].plot()
+#bench_set["acc_r_lowpass"].plot()
 # As the cutoff frequency increases smoothening decreases
 
 # --------------------------------------------------------------
@@ -116,8 +116,29 @@ count_repetitions(dead_set, cutoff=0.4)
 
 df["reps"] = df["category"].apply(lambda x: 5 if x == "heavy" else 10)
 rep_df = df.groupby(["label", "category", "set"])["reps"].max().reset_index()
+rep_df["reps_pred"]==0
 
+for s in df['set'].unique():
+    subset = df[df['set']==s]
+    column = 'acc_r'
+    cutoff = 0.4
+    
+    if subset['label'].iloc[0] == 'squat':
+        cutoff = 0.35
+    if subset['label'].iloc[0] == 'row':
+        cutoff = 0.65
+        col = 'gyr_x'
+        
+    if subset['label'].iloc[0] == 'ohp':
+        cutoff = 0.35
+    
+    reps = count_repetitions(subset, cutoff=cutoff, column=column)
+    rep_df.loc[rep_df['set']==s, 'reps_pred']=reps
+rep_df
+        
 
 # --------------------------------------------------------------
 # Evaluate the results
 # --------------------------------------------------------------
+error = mean_absolute_error(rep_df['reps'],rep_df['reps_pred']).round(2)
+rep_df.groupby(['label','category'])['reps','reps_pred'].mean().plot.bar()

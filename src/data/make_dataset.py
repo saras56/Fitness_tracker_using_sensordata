@@ -66,8 +66,8 @@ for f in files:
         gyr_df = pd.concat([gyr_df, df])
 
 # set is a count for each acc(94) and gyr(93) file.
-# total of 187 files
-
+# total of 187 files thus 187 sets
+# each set has 150-200 entries
 
 # --------------------------------------------------------------
 # Working with datetimes
@@ -155,8 +155,13 @@ df_merged.columns = [
 # --------------------------------------------------------------
 # Resample data (frequency conversion)
 # --------------------------------------------------------------
-# Accelerometer:    12.500HZ
-# Gyroscope:        25.000Hz
+# Accelerometer:    12.500HZ (1/12.5 = .04) # measured every .04s
+# Gyroscope:        25.000Hz (1/25 = .08)# measured every .08s
+# resamplimg works only on pandas datetime format
+# here there are a lot of rows with Nan values as acc and gyr 
+# measure in different time intervals. So we resample so as to get
+# just enough data by skipping the nan and setting an appropriate
+# interval (here 200ms)
 
 sampling = {
     "acc_x": "mean",
@@ -172,16 +177,17 @@ sampling = {
 }
 
 df_merged[:1000].resample(rule="200ms").apply(sampling)
-# applyin this resampling function on the whole dataframe would create unnecessary rows
-# in 200 ms interval and could potentially blow up the dataframe. So we create a
+# applyin this resampling function on the whole dataframe 
+# would create unnecessary rows in 200 ms interval and could 
+# potentially blow up the dataframe. So we create a
 # df for each day and then apply the resampling function
 
 days = [g for n, g in df_merged.groupby(pd.Grouper(freq="D"))]
 
 days[-1]
-len(
-    days
-)  # we have 10 different dfs as o/p of days. We have to concatenate it while resampling
+len(days)  
+# we have 10 different dfs as o/p of days
+# We have to concatenate it while resampling
 
 data_resampled = pd.concat(
     [df.resample(rule="200ms").apply(sampling).dropna() for df in days]
@@ -198,3 +204,6 @@ data_resampled["set"] = data_resampled["set"].astype("int")
 # --------------------------------------------------------------
 
 data_resampled.to_pickle("../../data/interim/01_data_processed.pkl")
+# pickle format is good when dataset contains timeformat
+# dont have to worry about conversion when reading the file later.
+# also very fast and small in size files

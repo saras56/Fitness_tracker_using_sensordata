@@ -15,6 +15,11 @@ outlier_columns= list(df.columns[:6])
 # --------------------------------------------------------------
 # Plotting outliers
 # --------------------------------------------------------------
+# in this case oulier could mean, data that cmes from 
+# adjusting positions while doing exercises. this sort 
+# of data has to remmoved otherwise it could be mistaken 
+# for different exercise positions which will result 
+# in poor model performance
 
 plt.style.use("ggplot")
 plt.rcParams["figure.figsize"] = (20, 5)
@@ -64,7 +69,7 @@ def plot_binary_outliers(dataset, col, outlier_col, reset_index):
     )
 
     plt.legend(
-        ["outlier " + col, "no outlier " + col],
+        ["no outlier " + col,"outlier " + col],
         loc="upper center",
         ncol=2,
         fancybox=True,
@@ -116,14 +121,15 @@ plot_binary_outliers(dataset=dataset, col=col, outlier_col=col+"_outlier", reset
 for col in outlier_columns:
     dataset = mark_outliers_iqr(df, col)
     plot_binary_outliers(dataset=dataset, col=col, outlier_col=col+"_outlier", reset_index=True)    
-# Observation: this diatribution based outlier detection method throws a 
-# lot of data as outliers. Might lead to loosing info   
+# Observation: this distribution based outlier detection method throws a 
+# lot of data as outliers. Might lead to info loss   
 
 # --------------------------------------------------------------
 # Chauvenets criteron (distribution based)
 # --------------------------------------------------------------
-
-# Check for normal distribution
+# outliers if the prob of occurence is less than 1/2N
+# Check for normal distribution as Chauvenets criterion is applied on 
+# normally distributed data 
 
 df[outlier_columns[:3] + ["label"]].plot.hist(by="label", figsize=(20, 20), layout=(3,3))
 df[outlier_columns[3:] + ["label"]].plot.hist(by="label", figsize=(20, 20), layout=(3,3))
